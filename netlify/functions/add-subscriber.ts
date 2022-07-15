@@ -25,8 +25,6 @@ const handler = jsonHandler('POST', async (event, inputData) => {
     // https://support.airtable.com/hc/en-us/articles/360040113434-Using-logical-operators-to-compare-field-values
     const [existingRecord] = await table.select({ filterByFormula: `Email = "${email}"` }).all();
 
-    console.log(existingRecord);
-
     if (existingRecord) {
       return {
         statusCode: 400,
