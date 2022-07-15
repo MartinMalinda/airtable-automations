@@ -1,36 +1,19 @@
-import { Handler } from '@netlify/functions';
-import { setupBase } from './setup-base';
+import { jsonHandler, setupBase } from './setup-base';
 import validate from 'deep-email-validator';
 
 const base = setupBase();
 const table = base.table('Email subscribers');
 
-const handler: Handler = async (event, context) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 404 };
-  }
-  //
-  // Error handling
-  //
-  let inputData: Record<string, any>;
-  try {
-    inputData = JSON.parse(event.body || '{}');
-  } catch (e) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ message: 'Could not parse JSON input' })
-    };
-  }
-
+const handler = jsonHandler('POST', async (event, inputData) => {
   const email = inputData.email as string | undefined;
   const { valid } = await validate(email || '');
 
   if (!valid) {
     return {
       statusCode: 400,
-      body: JSON.stringify({
+      body: {
         message: 'This email address does not seem to be valid. Please check the format and try again.'
-      })
+      }
     };
   }
 
@@ -45,7 +28,12 @@ const handler: Handler = async (event, context) => {
     console.log(existingRecord);
 
     if (existingRecord) {
-      return { statusCode: 400, body: JSON.stringify({ message: 'This email address is already on the list' }) };
+      return {
+        statusCode: 400,
+        body: {
+          message: 'This email address is already on the list'
+        }
+      };
     }
 
     await table.create({
@@ -53,7 +41,7 @@ const handler: Handler = async (event, context) => {
     });
 
     // All good, send a success response
-    return { statusCode: 200, body: '' };
+    return { statusCode: 200, body: {} };
   } catch (e) {
     // Connection to Airtable has failed. Airtable might be down or there's a different issue. Notify the end user.
     console.error(e);
@@ -61,11 +49,9 @@ const handler: Handler = async (event, context) => {
 
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Something went wrong' })
+      body: { message: 'Something went wrong' }
     };
   }
-
-
-};
+});
 
 export { handler };
