@@ -35,7 +35,7 @@ const handler: Handler = async (event, context) => {
   }
 
   //
-  // All Good => add record to Airtable
+  // Email valid => add record to Airtable
   //
 
   try {
@@ -57,6 +57,7 @@ const handler: Handler = async (event, context) => {
   } catch (e) {
     // Connection to Airtable has failed. Airtable might be down or there's a different issue. Notify the end user.
     console.error(e);
+    // You could also send this error to some error reporting service (Sentry and so on)
 
     return {
       statusCode: 500,
